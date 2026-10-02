@@ -1,0 +1,6 @@
+.fonts/
+build/
+__pycache__/
+*.pyc
+# Личные статьи (python -m forge new papers/<имя>) в публичный репозиторий не попадают
+papers/

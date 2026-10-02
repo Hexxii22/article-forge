@@ -1,0 +1,65 @@
+% Шаблон статьи article-forge. Сборка: python -m forge build <этот каталог>.
+\documentclass[10pt,a4paper,twocolumn]{article}
+\usepackage{artforge}            % [english] — английский документ
+
+\input{numbers.tex}              % \N<Key> — числа из figures.py
+
+\ArticleTopLine{Проект\ \textbullet\ Технический отчёт TR-0000-00}{Месяц 2026}
+\ArticleRunningHead{Проект · Технический отчёт TR-0000-00}{Краткое название}
+\ArticleTitle{Заголовок статьи:\\ что сделано и что это даёт}
+\ArticleAuthors{Автор\textsuperscript{1}\ \ \textbullet\ \ Соавтор\textsuperscript{2}}
+\ArticleAffiliations{\textsuperscript{1}Организация\quad\textsuperscript{2}Организация}
+\ArticleAbstract{%
+Одна-две фразы о задаче. Что сделано. Главный измеренный результат: медианное время снизилось
+с \NBaseMs\,мс до \NBestMs\,мс, в \NSpeedup~раза (\NRuns{} прогонов).}
+\ArticleKeywords{ключевое слово; ещё одно.}
+\ArticleHighlights{%           % необязательно: без него аннотация занимает всю ширину
+\NSpeedup\texttimes & ускорение по медиане\\
+\NRuns{} & прогонов в эксперименте\\
+}
+
+\begin{document}
+\MakeArticleTitle
+
+\section{Введение}
+Постановка задачи и вклад работы. Идентификаторы из кода набираются через \code{module.function_name}~—
+они переносятся в любом месте.
+
+\begin{keybox}{Главное}
+Вывод в одну фразу, который читатель должен унести.
+\end{keybox}
+
+\section{Методика}
+Как проводились измерения, на каком окружении, сколько повторов.
+
+\section{Результаты}
+Рис.~\ref{fig:speed} показывает медианное время для трёх вариантов.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\linewidth]{figures/fig_speed.pdf}
+\caption{Медианное время обработки по вариантам; \NRuns{} прогонов.}
+\label{fig:speed}
+\end{figure}
+
+\begin{table}[t]
+\caption{Пример таблицы.}
+\centering\tabfont
+\begin{tabular}{@{}lr@{}}
+\toprule
+Вариант & Медиана, мс\\
+\midrule
+базовый & \NBaseMs\\
+лучший & \NBestMs\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Обсуждение}
+Ограничения и что дальше. Решения, не подтверждённые источником, помечаются \decision.
+
+\balance
+\begin{thebibliography}{9}
+\bibitem{ex} Автор. Название. Издание, год. \url{https://example.org/}
+\end{thebibliography}
+
+\end{document}

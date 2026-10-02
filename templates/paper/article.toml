@@ -1,0 +1,4 @@
+# Настройки сборки (python -m forge build <каталог>)
+output = "paper.pdf"     # имя итогового PDF
+figures = "figures.py"   # скрипт: data/*.json → figures/*.pdf и numbers.tex
+passes = 2               # проходов XeLaTeX

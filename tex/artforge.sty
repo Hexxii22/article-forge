@@ -1,0 +1,201 @@
+% artforge.sty — журнальная вёрстка технических отчётов в две колонки (XeLaTeX).
+%
+% Шрифты: STIX Two (текст и формулы, из TeX Live: texlive-fonts-extra) и PT Sans / PT Sans Narrow /
+% PT Mono (OFL, скачиваются командой `python -m forge fonts` в каталог .fonts/ корня репозитория).
+% Каталог шрифтов задаёт \forgefontdir; сборщик `python -m forge build` подставляет абсолютный путь.
+%
+% Опции: russian (по умолчанию) | english — язык документа и подписей служебных блоков.
+%
+% Метаданные (в преамбуле документа):
+%   \ArticleTopLine{слева}{справа}      строка над заголовком первой страницы
+%   \ArticleRunningHead{слева}{справа}  колонтитул остальных страниц
+%   \ArticleTitle{...}  \ArticleAuthors{...}  \ArticleAffiliations{...}
+%   \ArticleAbstract{...}  \ArticleKeywords{...}
+%   \ArticleHighlights{значение & пояснение\\ ...}   (необязательно: колонка «Ключевые цифры»)
+% Затем в теле: \MakeArticleTitle.
+%
+% Окружения и команды: keybox{заголовок}, notebox{заголовок}, \code{идентификатор_с_переносами},
+% \decision, \tabfont.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{artforge}[2026/10/02 v1.0 article-forge journal layout]
+
+\newif\ifforge@english
+\DeclareOption{english}{\forge@englishtrue}
+\DeclareOption{russian}{\forge@englishfalse}
+\ProcessOptions\relax
+
+\RequirePackage[a4paper,top=21mm,bottom=21mm,left=17mm,right=17mm,columnsep=6.5mm,
+                headheight=12pt,headsep=7mm,footskip=10mm]{geometry}
+
+% ---------- шрифты и язык ----------
+\providecommand{\forgefontdir}{.fonts/}
+\RequirePackage{fontspec}
+\RequirePackage{unicode-math}
+\RequirePackage{polyglossia}
+\ifforge@english
+  \setdefaultlanguage{english}
+  \setotherlanguage{russian}
+\else
+  \setdefaultlanguage{russian}
+  \setotherlanguage{english}
+\fi
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{STIXTwoText}[Extension=.otf,UprightFont=*-Regular,ItalicFont=*-Italic,
+  BoldFont=*-SemiBold,BoldItalicFont=*-SemiBoldItalic]
+\setmathfont{STIXTwoMath-Regular.otf}
+\setsansfont{PT_Sans-Web}[Path=\forgefontdir,Extension=.ttf,UprightFont=*-Regular,BoldFont=*-Bold,
+  ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
+\newfontfamily\narrowsans{PT_Sans-Narrow-Web}[Path=\forgefontdir,Extension=.ttf,UprightFont=*-Regular,
+  BoldFont=*-Bold]
+\setmonofont{PTM55FT}[Path=\forgefontdir,Extension=.ttf,Scale=0.86,ItalicFont=PTM55FT,
+  ItalicFeatures={FakeSlant=0.18}]
+
+% ---------- пакеты ----------
+\RequirePackage{microtype}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\RequirePackage{multirow}
+\RequirePackage{enumitem}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage{lastpage}
+\RequirePackage{caption}
+\RequirePackage{amsmath}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds}
+\PassOptionsToPackage{obeyspaces,spaces}{url}% пробелы внутри \code сохраняются и служат местами переноса
+\RequirePackage[hidelinks]{hyperref}
+\RequirePackage{xurl}
+\RequirePackage{balance}
+\RequirePackage{needspace}
+
+% ---------- цвета (те же, что в forge/style.py) ----------
+\definecolor{ink}{HTML}{0B0B0B}
+\definecolor{ink2}{HTML}{52514E}
+\definecolor{muted}{HTML}{898781}
+\definecolor{rule}{HTML}{C3C2B7}
+\definecolor{hair}{HTML}{E1E0D9}
+\definecolor{neutral}{HTML}{F0EFEC}
+\definecolor{paper2}{HTML}{F7F6F2}
+\definecolor{accent}{HTML}{1C5CAB}
+\definecolor{accentL}{HTML}{E6EFFB}
+\definecolor{s1}{HTML}{2A78D6}
+\definecolor{s2}{HTML}{EB6834}
+\definecolor{s2L}{HTML}{FCEDE6}
+\definecolor{s3}{HTML}{1BAF7A}
+\definecolor{s4}{HTML}{EDA100}
+\hypersetup{colorlinks=true,linkcolor=accent,citecolor=accent,urlcolor=accent}
+
+% ---------- оформление ----------
+\setlength{\parindent}{1.1em}
+\setlength{\parskip}{0pt}
+\linespread{1.04}
+\emergencystretch=1.5em
+\raggedbottom
+% Плотнее размещать рисунки: иначе в двух колонках они копятся и уезжают на отдельные страницы.
+\renewcommand{\topfraction}{0.92}\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\bottomfraction}{0.6}\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.82}\renewcommand{\dblfloatpagefraction}{0.82}
+\setcounter{topnumber}{3}\setcounter{dbltopnumber}{2}\setcounter{bottomnumber}{2}\setcounter{totalnumber}{6}
+\setlist{leftmargin=1.2em,itemsep=1pt,topsep=3pt,parsep=0pt}
+\renewcommand{\arraystretch}{1.18}
+
+\titleformat{\section}{\sffamily\bfseries\large\color{ink}}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{11pt plus 3pt}{4pt}
+\titleformat{\subsection}{\sffamily\bfseries\normalsize\color{ink}}{\thesubsection}{0.55em}{}
+\titlespacing*{\subsection}{0pt}{8pt plus 2pt}{2.5pt}
+\titleformat{\paragraph}[runin]{\sffamily\bfseries\small\color{ink}}{}{0pt}{}[.]
+\titlespacing*{\paragraph}{0pt}{4pt plus 1pt}{0.5em}
+
+\captionsetup{font={small,sf},labelfont={bf,color=ink},textfont={color=ink2},labelsep=period,
+  justification=justified,singlelinecheck=false,skip=5pt}
+\captionsetup[table]{position=top,skip=3pt}
+
+\DeclareUrlCommand\code{\urlstyle{tt}}% идентификаторы переносятся в любом месте (xurl)
+\ifforge@english
+  \newcommand{\decision}{\textsf{\footnotesize[project decision]}}
+\else
+  \newcommand{\decision}{\textsf{\footnotesize[решение проекта]}}
+\fi
+\newcommand{\tabfont}{\sffamily\footnotesize}
+
+\tcbset{boxrule=0pt,arc=1.5pt,left=6pt,right=6pt,top=5pt,bottom=5pt}
+\newtcolorbox{keybox}[1]{colback=accentL,colframe=accentL,fonttitle=\sffamily\bfseries\small,
+  coltitle=accent,title={#1},attach title to upper={\par\smallskip},breakable}
+\newtcolorbox{notebox}[1]{colback=paper2,colframe=paper2,fonttitle=\sffamily\bfseries\small,
+  coltitle=ink,title={#1},attach title to upper={\par\smallskip},breakable}
+
+% ---------- метаданные и титульный блок ----------
+\ifforge@english
+  \newcommand{\forgeabstractname}{Abstract}
+  \newcommand{\forgekeywordsname}{Keywords:}
+  \newcommand{\forgehighlightsname}{Key figures}
+\else
+  \newcommand{\forgeabstractname}{Аннотация}
+  \newcommand{\forgekeywordsname}{Ключевые слова:}
+  \newcommand{\forgehighlightsname}{Ключевые цифры}
+\fi
+\newcommand{\forge@topleft}{}\newcommand{\forge@topright}{}
+\newcommand{\forge@headleft}{}\newcommand{\forge@headright}{}
+\newcommand{\forge@title}{}\newcommand{\forge@authors}{}\newcommand{\forge@affil}{}
+\newcommand{\forge@abstract}{}\newcommand{\forge@keywords}{}\newcommand{\forge@highlights}{}
+\newcommand{\ArticleTopLine}[2]{\renewcommand{\forge@topleft}{#1}\renewcommand{\forge@topright}{#2}}
+\newcommand{\ArticleRunningHead}[2]{\renewcommand{\forge@headleft}{#1}\renewcommand{\forge@headright}{#2}}
+\newcommand{\ArticleTitle}[1]{\renewcommand{\forge@title}{#1}}
+\newcommand{\ArticleAuthors}[1]{\renewcommand{\forge@authors}{#1}}
+\newcommand{\ArticleAffiliations}[1]{\renewcommand{\forge@affil}{#1}}
+\newcommand{\ArticleAbstract}[1]{\renewcommand{\forge@abstract}{#1}}
+\newcommand{\ArticleKeywords}[1]{\renewcommand{\forge@keywords}{#1}}
+\newcommand{\ArticleHighlights}[1]{\renewcommand{\forge@highlights}{#1}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\color{rule}\hrule height\headrulewidth}
+\fancyhead[L]{\sffamily\scriptsize\color{ink2}\forge@headleft}
+\fancyhead[R]{\sffamily\scriptsize\color{ink2}\forge@headright}
+\fancyfoot[C]{\sffamily\scriptsize\color{ink2}\thepage\ / \pageref{LastPage}}
+\fancypagestyle{first}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}
+  \fancyfoot[C]{\sffamily\scriptsize\color{ink2}\thepage\ / \pageref{LastPage}}}
+
+\newcommand{\forge@abstractblock}{%
+  {\sffamily\bfseries\small\color{ink}\forgeabstractname}\par\smallskip
+  \small\forge@abstract\par
+  \ifx\forge@keywords\@empty\else
+    \smallskip{\sffamily\footnotesize\color{ink2}\textbf{\forgekeywordsname} \forge@keywords}%
+  \fi}
+
+\newcommand{\MakeArticleTitle}{%
+\twocolumn[{%
+\thispagestyle{first}
+{\sffamily\scriptsize\color{ink2}\forge@topleft\hfill\forge@topright}\par
+\vspace{2pt}{\color{rule}\rule{\textwidth}{0.6pt}}\par\vspace{12pt}
+{\sffamily\bfseries\fontsize{21}{25}\selectfont\color{ink}\raggedright\hyphenpenalty=10000\exhyphenpenalty=10000
+\forge@title\par}
+\vspace{9pt}
+{\sffamily\normalsize\forge@authors\par}
+\ifx\forge@affil\@empty\else\vspace{3pt}{\sffamily\scriptsize\color{ink2}\forge@affil\par}\fi
+\vspace{11pt}
+\begin{tcolorbox}[colback=paper2,colframe=paper2,left=9pt,right=9pt,top=8pt,bottom=8pt]
+\ifx\forge@highlights\@empty
+  \forge@abstractblock
+\else
+  \begin{minipage}[t]{0.665\textwidth}\forge@abstractblock\end{minipage}\hfill
+  \begin{minipage}[t]{0.29\textwidth}
+  {\sffamily\bfseries\small\color{accent}\forgehighlightsname}\par\smallskip
+  \sffamily\footnotesize\color{ink}
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabular}{@{}>{\bfseries\color{accent}}r@{\ \ }>{\raggedright\arraybackslash}p{0.66\linewidth}@{}}
+  \forge@highlights
+  \end{tabular}
+  \end{minipage}
+\fi
+\end{tcolorbox}
+\vspace{12pt}
+}]}
+
+\endinput
