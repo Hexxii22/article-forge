@@ -72,6 +72,7 @@
 \RequirePackage{xurl}
 \RequirePackage{balance}
 \RequirePackage{needspace}
+\RequirePackage{etoolbox}
 
 % ---------- цвета (те же, что в forge/style.py) ----------
 \definecolor{ink}{HTML}{0B0B0B}
@@ -116,6 +117,10 @@
 \captionsetup[table]{position=top,skip=3pt}
 
 \DeclareUrlCommand\code{\urlstyle{tt}}% идентификаторы переносятся в любом месте (xurl)
+\robustify{\code}% можно писать в подписях рисунков и таблиц
+% Заголовок раздела не остаётся последней строкой колонки
+\pretocmd{\section}{\needspace{8\baselineskip}}{}{}
+\pretocmd{\subsection}{\needspace{5\baselineskip}}{}{}
 \ifforge@english
   \newcommand{\decision}{\textsf{\footnotesize[project decision]}}
 \else
